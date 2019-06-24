@@ -29,3 +29,11 @@ end
 function pointOverBox(x,y,x2,y2,w,h,t)
   return x > x2 and x < x2+w and y > y2 and y < y2+h
 end
+
+function string.starts(str, start)
+  return str:sub(1, #start) == start
+end
+
+function string.ends(str, ending)
+  return ending == "" or str:sub(-#ending) == ending
+end
