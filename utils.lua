@@ -9,8 +9,13 @@ function clear()
   baby = 0
   babxvel = 0
   babyvel = 0
+  babfacing = 1
   babhappy = false
   babhappytimeout = false
+  babhunger = 40
+  babhungertimeout = false
+  babmood = 20
+  babmoodtimeout = false
   func_queue = {}
 end
 

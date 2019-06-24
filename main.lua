@@ -157,6 +157,8 @@ function love.update(dt)
 
         deleteActions(bh)
         queueAction(bh, 1)
+
+        babhunger = babhunger + 0.5
         -- insert snacc sound effect here
       end
     elseif particle.type == "heart" then
@@ -183,9 +185,11 @@ function love.update(dt)
 
   if love.keyboard.isDown("d") then --just for the particle demo, going to be controlled by an ai later
     babxvel = babxvel + dt * 10
+    babfacing = 1
   end
   if love.keyboard.isDown("a") then
     babxvel = babxvel - dt * 10
+    babfacing = -1
   end
   if love.keyboard.isDown("w") and baby >= love.graphics.getHeight()-sprites["bab"]:getHeight() then
     babyvel = -5
@@ -236,7 +240,10 @@ function love.update(dt)
     mouseholdingbab = true
   end
 
-  babx = limit(babx, 0, love.graphics.getWidth()-sprites["bab"]:getWidth())
+  if babx ~= limit(babx, 0, love.graphics.getWidth()-sprites["bab"]:getWidth()) then
+    babx = limit(babx, 0, love.graphics.getWidth()-sprites["bab"]:getWidth())
+    babxvel = -babxvel*0.6
+  end
   baby = limit(baby, 0, love.graphics.getHeight()-sprites["bab"]:getHeight())
 
   if babhappy and math.random(1,10) == 1 then
@@ -248,6 +255,33 @@ function love.update(dt)
       yvel = math.random(-10, 10)/100,
       seed = math.random(0, 10000)/100000
     })
+  end
+
+  if babhappy then
+    babmood = babmood + 0.3
+  end
+
+  babmood = limit(babmood, -50, 100)
+  babhunger = limit(babhunger, -50, 100)
+
+  if not babmoodtimeout then
+    babmoodtimeout = true
+    babmood = babmood - 1
+    
+    local function bmt()
+      babmoodtimeout = false
+    end
+    queueAction(bmt, 10)
+  end
+
+  if not babhungertimeout then
+    babhungertimeout = true
+    babhunger = babhunger - 1
+    
+    local function bht()
+      babhungertimeout = false
+    end
+    queueAction(bht, 6)
   end
 
   oldmousex, oldmousey = love.mouse.getPosition()
@@ -296,8 +330,23 @@ function love.draw()
     babsprite = sprites["babhappy"]
   end
 
+  local babxdraw = babx
+  if babfacing == -1 then
+    babxdraw = babx + babsprite:getWidth()
+  end
+
   love.graphics.setColor(1,1,1)
-  love.graphics.draw(babsprite, babx, baby)
+  love.graphics.draw(babsprite, babxdraw, baby, 0, babfacing, 1)
+
+  love.graphics.setColor(0,1,0)
+  love.graphics.rectangle("fill", love.graphics.getWidth()-110, 10, babmood, 30)
+  love.graphics.setColor(0,0,0)
+  love.graphics.rectangle("line", love.graphics.getWidth()-110, 10, 100, 30)
+
+  love.graphics.setColor(1,1,0)
+  love.graphics.rectangle("fill", love.graphics.getWidth()-110, 50, babhunger, 30)
+  love.graphics.setColor(0,0,0)
+  love.graphics.rectangle("line", love.graphics.getWidth()-110, 50, 100, 30)
 
   local mousspritename
   if mouseOverBox(babx, baby, babsprite:getWidth(), babsprite:getHeight()) then
