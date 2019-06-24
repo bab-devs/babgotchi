@@ -4,29 +4,9 @@ require "audio"
 
 is_mobile = love.system.getOS() == "Android" or love.system.getOS() == "iOS"
 
-sprites = {}
-particles = {}
+function love.load()
+  clear()
 
-frames = 0
-fpstimer = 0
-
-fps = 0
-
-oldmousex = 0
-oldmousey = 0
-
-babx = 0
-baby = 0
-
-babxvel = 0
-babyvel = 0
-
-babhappy = false
-babhappytimeout = false
-
-func_queue = {}
-
-function love.load(dt)
   local libstatus, liberr = pcall(function() discordRPC = require "lib/discordRPC" end)
   if libstatus then
     discordRPC = require "lib/discordRPC"
@@ -37,6 +17,7 @@ function love.load(dt)
 
   love.graphics.setDefaultFilter("nearest","nearest")
 
+  sprites = {}
   local function addsprites(d)
     local dir = "assets/sprites"
     if d then

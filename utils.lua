@@ -1,3 +1,19 @@
+function clear()
+  particles = {}
+  frames = 0
+  fpstimer = 0
+  fps = 0
+  oldmousex = 0
+  oldmousey = 0
+  babx = 0
+  baby = 0
+  babxvel = 0
+  babyvel = 0
+  babhappy = false
+  babhappytimeout = false
+  func_queue = {}
+end
+
 function hslToRgb(h, s, l, a)
   local r, g, b
 

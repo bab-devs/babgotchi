@@ -4,7 +4,7 @@ function love.conf(t)
     t.version = "11.0"
 
     t.window.title = "Babgotchi"
-    t.window.icon = "assets/sprites/bab appicon.png"
+    t.window.icon = "assets/sprites/bab-appicon.png"
     t.window.resizable = false
     
     t.window.minwidth = 640
