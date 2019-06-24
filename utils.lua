@@ -26,9 +26,14 @@ function hslToRgb(h, s, l, a)
 end
 
 
-function pointOverBox(x,y,x2,y2,w,h,t)
+function pointOverBox(x,y,x2,y2,w,h)
   return x > x2 and x < x2+w and y > y2 and y < y2+h
 end
+
+function mouseOverBox(x,y,w,h)
+  return pointOverBox(love.mouse.getX(),love.mouse.getY(),x,y,w,h)
+end
+
 
 function string.starts(str, start)
   return str:sub(1, #start) == start
@@ -36,4 +41,26 @@ end
 
 function string.ends(str, ending)
   return ending == "" or str:sub(-#ending) == ending
+end
+
+function deleteActions(func, timeAhead)
+  for i,qf in ipairs(func_queue) do
+    if (qf[1] == func or not func) and (qf[3] == timeAhead or not timeAhead) then
+      table.remove(func_queue, i)
+    end
+  end
+end
+
+function queueAction(func, timeAhead)
+  table.insert(func_queue, {func, love.timer.getTime(), timeAhead})
+end
+
+function limit(value, min, max)
+  if max and value >= max then
+    return max
+  elseif min and value <= min then
+    return min
+  else
+    return value
+  end
 end

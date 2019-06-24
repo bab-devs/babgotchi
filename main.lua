@@ -15,6 +15,17 @@ fps = 0
 oldmousex = 0
 oldmousey = 0
 
+babx = 0
+baby = 0
+
+babxvel = 0
+babyvel = 0
+
+babhappy = false
+babhappytimeout = false
+
+func_queue = {}
+
 function love.load(dt)
   local libstatus, liberr = pcall(function() discordRPC = require "lib/discordRPC" end)
   if libstatus then
@@ -93,23 +104,30 @@ function love.load(dt)
 
   print("\nboot complete!")
 
+  baby = love.graphics.getHeight()-sprites["bab"]:getHeight()
+
   if not is_mobile then
     love.mouse.setCursor(love.mouse.newCursor(love.image.newImageData(32, 32)))
   end
-
-  babx = 0
-  baby = love.graphics.getHeight()-sprites["bab"]:getHeight()
 
   resetMusic("babgotchi", 0.5)
 end
 
 function love.update(dt)
+  babhappy = false
   fpstimer = fpstimer + dt
 
   if fpstimer >= 1 then
     fps = frames/fpstimer
     fpstimer = 0
     frames = 0
+  end
+
+  for i,qf in pairs(func_queue) do
+    if qf[2]+qf[3] < love.timer.getTime() then
+      qf[1]()
+      table.remove(func_queue, i)
+    end
   end
 
   for i,particle in ipairs(particles) do
@@ -146,27 +164,67 @@ function love.update(dt)
 
       if pointOverBox(particle.x, particle.y, babx, baby, sprites["bab"]:getWidth(), sprites["bab"]:getHeight()) then
         table.remove(particles, i)
+        babhappy = true
+
+        local function bh()
+          babhappy = false
+        end
+
+        deleteActions(bh)
+        queueAction(bh, 1)
         -- insert snacc sound effect here
       end
     end
   end
 
-  if love.mouse.isDown(1) then
-    table.insert(particles, {type = "food", x = love.mouse.getX(), y = love.mouse.getY(), xvel = (love.mouse.getX()-oldmousex)/2+math.random(-100,100)/100, yvel = (love.mouse.getY()-oldmousey)/2+math.random(-100,100)/100, rot = 0, seed = math.random(0, 10000)/10000})
+  if love.keyboard.isDown("d") then --just for the particle demo, going to be controlled by an ai later
+    babxvel = babxvel + dt * 10
+  end
+  if love.keyboard.isDown("a") then
+    babxvel = babxvel - dt * 10
+  end
+  if love.keyboard.isDown("w") and baby >= love.graphics.getHeight()-sprites["bab"]:getHeight() then
+    babyvel = -5
   end
 
-  if love.keyboard.isDown("d") and not (babx > love.graphics.getWidth()-sprites["bab"]:getWidth()) then --just for the particle demo, going to be controlled by an ai later
-    babx = babx + dt * 400
+  local gravity = 0.1
+
+  babx = babx + babxvel * dt * 100
+  baby = baby + babyvel * dt * 100
+
+  babxvel = babxvel * 0.99
+  if not (baby >= love.graphics.getHeight()-sprites["bab"]:getHeight()) then
+    babyvel = babyvel + gravity * dt * 100
+  else
+    babyvel = 0
   end
-  if love.keyboard.isDown("a") and not (babx < 0) then
-    babx = babx - dt * 400
+
+  if love.mouse.isDown(1) and not mouseOverBox(babx, baby, sprites["bab"]:getWidth(), sprites["bab"]:getHeight()) then
+    table.insert(particles, {type = "food", x = love.mouse.getX(), y = love.mouse.getY(), xvel = (love.mouse.getX()-oldmousex)/2+math.random(-100,100)/100, yvel = (love.mouse.getY()-oldmousey)/2+math.random(-100,100)/100, rot = 0, seed = math.random(0, 10000)/100000, crtime = love.timer.getTime()})
+  elseif love.mouse.isDown(1) and mouseOverBox(babx, baby, sprites["bab"]:getWidth(), sprites["bab"]:getHeight()) and ((oldmousex ~= love.mouse.getX() and oldmousey ~= love.mouse.getY()) or babhappytimeout) then
+    babhappy = true
+
+    if oldmousex ~= love.mouse.getX() and oldmousey ~= love.mouse.getY() then
+      babhappytimeout = true
+
+      local function bht()
+        babhappytimeout = false
+      end
+
+      deleteActions(bht)
+      queueAction(bht, 1)
+    end
+  elseif love.mouse.isDown(2) and (mouseOverBox(babx, baby, sprites["bab"]:getWidth(), sprites["bab"]:getHeight()) or mouseholdingbab) then
+    babx = love.mouse.getX() - sprites["bab"]:getWidth()/3
+    baby = love.mouse.getY() - sprites["bab"]:getHeight()/3
+    babxvel = love.mouse.getX()-oldmousex
+    babyvel = love.mouse.getY()-oldmousey
+
+    mouseholdingbab = true
   end
-  if love.keyboard.isDown("w") and not (baby < 0) then
-    baby = baby - dt * 400
-  end
-  if love.keyboard.isDown("s") and not (baby > love.graphics.getHeight()-sprites["bab"]:getHeight()) then
-    baby = baby + dt * 400
-  end
+
+  babx = limit(babx, 0, love.graphics.getWidth()-sprites["bab"]:getWidth())
+  baby = limit(baby, 0, love.graphics.getHeight()-sprites["bab"]:getHeight())
 
   oldmousex, oldmousey = love.mouse.getPosition()
 end
@@ -186,22 +244,41 @@ function love.draw()
     love.graphics.rotate(math.rad(particle.rot))
     love.graphics.translate(-10 / 2, -10 / 2)
 
-    love.graphics.setColor(hslToRgb(particle.seed, 0.5, 0.7))
+    love.graphics.setColor(hslToRgb(particle.crtime%1, 0.5, 0.7))
     love.graphics.rectangle("fill", 0, 0, 10, 10)
-    love.graphics.setColor(hslToRgb(particle.seed, 0.5, 0.5))
+    love.graphics.setColor(hslToRgb(particle.crtime%1, 0.5, 0.5))
     love.graphics.rectangle("fill", 2, 2, 6, 6)
 
     love.graphics.pop()
   end
 
   local babsprite = sprites["bab"]
+ 
+  if babhappy then
+    babsprite = sprites["babhappy"]
+  end
+
   love.graphics.setColor(1,1,1)
   love.graphics.draw(babsprite, babx, baby)
 
+  local mousspritename
+  if mouseOverBox(babx, baby, babsprite:getWidth(), babsprite:getHeight()) then
+    mousspritename = "han"
+  else
+    mousspritename = "mous"
+  end
+  local moussprite = sprites[mousspritename]
+
   love.graphics.setColor(0, 0, 0)
-  love.graphics.draw(sprites["mous"], love.mouse.getX()-1, love.mouse.getY()-1, 0, (sprites["mous"]:getWidth()+11)/sprites["mous"]:getWidth(), (sprites["mous"]:getHeight()+5)/sprites["mous"]:getHeight())
+  love.graphics.draw(moussprite, love.mouse.getX()-1, love.mouse.getY()-1, 0, (moussprite:getWidth()+11)/moussprite:getWidth(), (moussprite:getHeight()+5)/moussprite:getHeight())
   love.graphics.setColor(1, 1, 1)
-  love.graphics.draw(sprites["mous"], love.mouse.getX(), love.mouse.getY())
+  love.graphics.draw(moussprite, love.mouse.getX(), love.mouse.getY())
 
   love.graphics.print(math.floor(fps*100)/100 .. "FPS")
+end
+
+function love.mousereleased(x, y, button)
+  if button == 2 then
+    mouseholdingbab = false
+  end
 end
