@@ -64,3 +64,22 @@ function limit(value, min, max)
     return value
   end
 end
+
+function table.match(t, mth)
+  local returntables = {}
+  for _,object in pairs(t) do
+    local returntable = true
+
+    for i,matchobject in pairs(mth) do
+      if object[i] ~= matchobject then
+        returntable = false
+      end
+    end
+    
+    if returntable then
+      table.insert(returntables, object)
+    end
+  end
+
+  return returntables
+end

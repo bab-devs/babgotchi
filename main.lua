@@ -131,6 +131,10 @@ function love.update(dt)
   end
 
   for i,particle in ipairs(particles) do
+    if not particle.lifetime then
+      particle.lifetime = 0
+    end
+
     if particle.type == "food" then
       local gravity = 0.05+particle.seed/10
 
@@ -174,6 +178,25 @@ function love.update(dt)
         queueAction(bh, 1)
         -- insert snacc sound effect here
       end
+    elseif particle.type == "heart" then
+      if not particle.velorig then
+        particle.velorig = particle.xvel
+      end
+      if particle.lifetime > (1 + particle.seed * 2) then
+        particle.xvel = particle.xvel * 0.95
+        particle.yvel = particle.yvel * 0.95
+      end
+
+      particle.alpha = particle.xvel/particle.velorig
+
+      particle.x = particle.x + particle.xvel * dt * 100
+      particle.y = particle.y + particle.yvel * dt * 100
+
+      particle.lifetime = particle.lifetime + dt
+
+      if particle.alpha < 0 then
+        table.remove(particles, i)
+      end
     end
   end
 
@@ -200,7 +223,16 @@ function love.update(dt)
   end
 
   if love.mouse.isDown(1) and not mouseOverBox(babx, baby, sprites["bab"]:getWidth(), sprites["bab"]:getHeight()) then
-    table.insert(particles, {type = "food", x = love.mouse.getX(), y = love.mouse.getY(), xvel = (love.mouse.getX()-oldmousex)/2+math.random(-100,100)/100, yvel = (love.mouse.getY()-oldmousey)/2+math.random(-100,100)/100, rot = 0, seed = math.random(0, 10000)/100000, crtime = love.timer.getTime()})
+    table.insert(particles, {
+        type = "food", 
+        x = love.mouse.getX(), 
+        y = love.mouse.getY(), 
+        xvel = (love.mouse.getX()-oldmousex)/2+math.random(-100,100)/100, 
+        yvel = (love.mouse.getY()-oldmousey)/2+math.random(-100,100)/100, 
+        rot = 0, 
+        seed = math.random(0, 10000)/100000, 
+        crtime = love.timer.getTime()
+      })
   elseif love.mouse.isDown(1) and mouseOverBox(babx, baby, sprites["bab"]:getWidth(), sprites["bab"]:getHeight()) and ((oldmousex ~= love.mouse.getX() and oldmousey ~= love.mouse.getY()) or babhappytimeout) then
     babhappy = true
 
@@ -226,6 +258,17 @@ function love.update(dt)
   babx = limit(babx, 0, love.graphics.getWidth()-sprites["bab"]:getWidth())
   baby = limit(baby, 0, love.graphics.getHeight()-sprites["bab"]:getHeight())
 
+  if babhappy and math.random(1,10) == 1 then
+    table.insert(particles, {
+      type = "heart",
+      x = babx+math.random(0, sprites["bab"]:getWidth()),
+      y = baby-math.random(-5,5),
+      xvel = math.random(-10, 10)/100,
+      yvel = math.random(-10, 10)/100,
+      seed = math.random(0, 10000)/100000
+    })
+  end
+
   oldmousex, oldmousey = love.mouse.getPosition()
 end
 
@@ -236,20 +279,34 @@ function love.draw()
   love.graphics.draw(bgsprite, 0, 0, 0, love.graphics.getWidth()/bgsprite:getWidth(), love.graphics.getWidth()/bgsprite:getWidth())
 
   for _,particle in ipairs(particles) do
-    love.graphics.push()
+    if particle.type == "food" then
+      love.graphics.push()
 
-    love.graphics.translate(particle.x, particle.y)
+      love.graphics.translate(particle.x, particle.y)
 
-    love.graphics.translate(10 / 2,  10 / 2)
-    love.graphics.rotate(math.rad(particle.rot))
-    love.graphics.translate(-10 / 2, -10 / 2)
+      love.graphics.translate(10 / 2,  10 / 2)
+      love.graphics.rotate(math.rad(particle.rot))
+      love.graphics.translate(-10 / 2, -10 / 2)
 
-    love.graphics.setColor(hslToRgb(particle.crtime%1, 0.5, 0.7))
-    love.graphics.rectangle("fill", 0, 0, 10, 10)
-    love.graphics.setColor(hslToRgb(particle.crtime%1, 0.5, 0.5))
-    love.graphics.rectangle("fill", 2, 2, 6, 6)
+      love.graphics.setColor(hslToRgb(particle.crtime%1, 0.5, 0.7))
+      love.graphics.rectangle("fill", 0, 0, 10, 10)
+      love.graphics.setColor(hslToRgb(particle.crtime%1, 0.5, 0.5))
+      love.graphics.rectangle("fill", 2, 2, 6, 6)
 
-    love.graphics.pop()
+      love.graphics.pop()
+    elseif particle.type == "heart" then
+      love.graphics.push()
+
+      love.graphics.translate(particle.x, particle.y)
+
+      love.graphics.translate(sprites["heart"]:getWidth() / 2,  sprites["heart"]:getHeight() / 2)
+      love.graphics.translate(-sprites["heart"]:getWidth() / 2, -sprites["heart"]:getHeight() / 2)
+
+      love.graphics.setColor(244/255, 66/255, 223/255, particle.alpha)
+      love.graphics.draw(sprites["heart"], 0, 0)
+
+      love.graphics.pop()
+    end
   end
 
   local babsprite = sprites["bab"]
