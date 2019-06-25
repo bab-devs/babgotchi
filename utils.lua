@@ -5,17 +5,6 @@ function clear()
   fps = 0
   oldmousex = 0
   oldmousey = 0
-  babx = 0
-  baby = 0
-  babxvel = 0
-  babyvel = 0
-  babfacing = 1
-  babhappy = false
-  babhappytimeout = false
-  babhunger = 40
-  babhungertimeout = false
-  babmood = 20
-  babmoodtimeout = false
   func_queue = {}
 end
 
