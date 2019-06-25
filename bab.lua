@@ -1,3 +1,21 @@
+babx = 0
+baby = 0
+babhappy = false
+babhappytimeout = false
+babhunger = 40
+babhungertimeout = false
+babmood = 20
+babmoodtimeout = false
+
+local babxvel = 0
+local babyvel = 0
+local babfacing = 1
+
+local babaiphase = 'idle'
+local babaixseek = 0
+local babaiindexseek = 1
+babaiidlefacing = nil
+
 local function update(dt)
   babhappy = false
   local gravity = 0.1
@@ -48,6 +66,11 @@ local function update(dt)
   if babx ~= limit(babx, 0, love.graphics.getWidth()-sprites["bab"]:getWidth()) then
     babx = limit(babx, 0, love.graphics.getWidth()-sprites["bab"]:getWidth())
     babxvel = -babxvel*0.6
+
+    babfacing = -babfacing
+    if babaiidlefacing then
+      babaiidlefacing = -babaiidlefacing
+    end
   end
   baby = limit(baby, 0, love.graphics.getHeight()-sprites["bab"]:getHeight())
 
@@ -85,6 +108,64 @@ local function update(dt)
     end
     queueAction(bht, 6)
   end
+
+  if #table.match(particles, {type = "food"}) > 0 then
+    local match = table.match(particles, {type = "food"})
+
+    babaiphase = "seek"
+    if not babaiindexseek or not match[babaiindexseek] then
+      babaiindexseek = math.random(1, #match)
+    end
+
+    babaixseek = match[babaiindexseek].x
+  end
+
+  if babaiphase == "seek" then
+    if babx < babaixseek-10 then
+      babxvel = babxvel + dt * 10
+      babfacing = 1
+    elseif babx > babaixseek + 10 then
+      babxvel = babxvel - dt * 10
+      babfacing = -1
+    elseif baby >= love.graphics.getHeight()-sprites["bab"]:getHeight() then
+      babaiphase = "jump"
+      babyvel = math.random(-3,-6)
+    end
+  elseif babaiphase == "jump" then
+    if baby >= love.graphics.getHeight()-sprites["bab"]:getHeight() then
+      babaiphase = "idle"
+    end
+  elseif babaiphase == "idle" then
+    if not babaiidlefacing then
+      babaiidlefacing = math.random(-1, 1)
+
+      local function refreshfacing()
+        babaiidlefacing = nil
+      end
+
+      queueAction(refreshfacing, math.random(1,5))
+    end
+
+    if babaiidlefacing == 1 then
+      babxvel = babxvel + dt * 3
+      babfacing = 1
+    elseif babaiidlefacing == -1 then
+      babxvel = babxvel - dt * 3
+      babfacing = -1
+    end
+  end
+
+  --[[if love.keyboard.isDown("d") then
+    babxvel = babxvel + dt * 10
+    babfacing = 1
+  end
+  if love.keyboard.isDown("a") then
+    babxvel = babxvel - dt * 10
+    babfacing = -1
+  end
+  if love.keyboard.isDown("w") and baby >= love.graphics.getHeight()-sprites["bab"]:getHeight() then
+    babyvel = -5
+  end]]
 end
 
 local function draw()
@@ -115,6 +196,10 @@ local function babclear()
   babhungertimeout = false
   babmood = 20
   babmoodtimeout = false
+  babaiphase = 'idle'
+  babaixseek = 0
+  babaiidlefacing = nil
+  babaiindexseek = 1
 end
 
 local function load()

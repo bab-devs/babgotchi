@@ -117,18 +117,6 @@ function love.update(dt)
   bab.update(dt)
   particle.update(dt)
 
-  if love.keyboard.isDown("d") then --just for the particle demo, going to be controlled by an ai later
-    babxvel = babxvel + dt * 10
-    babfacing = 1
-  end
-  if love.keyboard.isDown("a") then
-    babxvel = babxvel - dt * 10
-    babfacing = -1
-  end
-  if love.keyboard.isDown("w") and baby >= love.graphics.getHeight()-sprites["bab"]:getHeight() then
-    babyvel = -5
-  end
-
   babmood = limit(babmood, -50, 100)
   babhunger = limit(babhunger, -50, 100)
   
