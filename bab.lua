@@ -16,9 +16,12 @@ local babaixseek = 0
 local babaiindexseek = 1
 babaiidlefacing = nil
 
+local gravity = 0.1
+
 local function update(dt)
   babhappy = false
-  local gravity = 0.1
+
+  -- update all movement and velocity
 
   babx = babx + babxvel * dt * 100
   baby = baby + babyvel * dt * 100
@@ -29,6 +32,8 @@ local function update(dt)
   else
     babyvel = 0
   end
+
+  -- bab petting and feeding
 
   if love.mouse.isDown(1) and not mouseOverBox(babx, baby, sprites["bab"]:getWidth(), sprites["bab"]:getHeight()) then
     table.insert(particles, {
@@ -63,6 +68,8 @@ local function update(dt)
     mouseholdingbab = true
   end
 
+  -- limit bab to only the box the game is contained in
+
   if babx ~= limit(babx, 0, love.graphics.getWidth()-sprites["bab"]:getWidth()) then
     babx = limit(babx, 0, love.graphics.getWidth()-sprites["bab"]:getWidth())
     babxvel = -babxvel*0.6
@@ -86,6 +93,8 @@ local function update(dt)
   end
   baby = limit(baby, 0, love.graphics.getHeight()-sprites["bab"]:getHeight())
 
+  -- heart particles when bab's happy
+
   if babhappy and math.random(1,10) == 1 then
     table.insert(particles, {
       type = "heart",
@@ -97,9 +106,13 @@ local function update(dt)
     })
   end
 
+  -- increase mood when bab is happy
+
   if babhappy then
-    babmood = babmood + 0.3
+    babmood = babmood + 0.2
   end
+
+  -- take away 1% of bab's mood every 10 seconds
 
   if not babmoodtimeout then
     babmoodtimeout = true
@@ -111,6 +124,8 @@ local function update(dt)
     queueAction(bmt, 10)
   end
 
+  -- take away 1% of bab's satisfaction every 6 seconds
+
   if not babhungertimeout then
     babhungertimeout = true
     babhunger = babhunger - 1
@@ -121,7 +136,9 @@ local function update(dt)
     queueAction(bht, 6)
   end
 
-  if #table.match(particles, {type = "food"}) > 0 then
+  -- ai!!!!
+
+  if #table.match(particles, {type = "food"}) > 0 and babaiphase ~= "jump" then
     local match = table.match(particles, {type = "food"})
 
     babaiphase = "seek"
@@ -133,6 +150,12 @@ local function update(dt)
   end
 
   if babaiphase == "seek" then
+    -- the seek phase is for when bab sees food! bab will see food regardless of if bab is facing to the food or not
+    -- once detecting a bit of food, bab will run to it and jump in hopes of catching it if its flying and switches to the jump phase
+    -- this repeats until there's no food left, in which case bab returns back to idle phase
+
+    -- babaixseek is the x coordinate of the food bit bab is trying to catch. bab stores it so it wont run around aimlessly if there are more than 1 bits of food
+
     if babx < babaixseek-10 then
       babxvel = babxvel + dt * 10
       babfacing = 1
@@ -144,10 +167,15 @@ local function update(dt)
       babyvel = math.random(-3,-6)
     end
   elseif babaiphase == "jump" then
+    -- the jump phase is when bab jumps during a seek phase! all other ai is stopped until bab drops to the floor, in which case bab goes back to idle mode
+
     if baby >= love.graphics.getHeight()-sprites["bab"]:getHeight() then
       babaiphase = "idle"
     end
   elseif babaiphase == "idle" then
+    -- the idle phase is to get bab to do something if nothing's intresting is happening. bab will walk around and take a nap (currently unimplemented)!
+    -- change bab's dir once in a while to keep it intresting
+
     if not babaiidlefacing then
       babaiidlefacing = math.random(-1, 1)
 
@@ -157,6 +185,21 @@ local function update(dt)
 
       queueAction(refreshfacing, math.random(1,5))
     end
+
+    -- dir fixing for if bab's about to crash into a "wall"
+
+    if babaiidlefacing ~= 0 and babx ~= limit(babx, 20, love.graphics.getWidth()-sprites["bab"]:getWidth()-20) and not babalreadyfixeddirfrombeingcrashdir then
+      babaiidlefacing = -babaiidlefacing
+      babalreadyfixeddirfrombeingcrashdir = true
+
+      local function antifixdir()
+        babalreadyfixeddirfrombeingcrashdir = false
+      end
+
+      queueAction(antifixdir, 1)
+    end
+
+    -- move bab according to its dir
 
     if babaiidlefacing == 1 then
       babxvel = babxvel + dt * 3

@@ -151,7 +151,9 @@ function love.draw()
   local moussprite = sprites[mousspritename]
 
   love.graphics.setColor(0, 0, 0)
-  love.graphics.draw(moussprite, love.mouse.getX()-1, love.mouse.getY()-1, 0, (moussprite:getWidth()+11)/moussprite:getWidth(), (moussprite:getHeight()+5)/moussprite:getHeight())
+  for i,coordp in ipairs({{0,1},{1,0},{-1,0},{0,-1},{1,1},{-1,-1}}) do
+    love.graphics.draw(moussprite, love.mouse.getX()+coordp[1], love.mouse.getY()+coordp[2])
+  end
   love.graphics.setColor(1, 1, 1)
   love.graphics.draw(moussprite, love.mouse.getX(), love.mouse.getY())
 
@@ -162,4 +164,11 @@ function love.mousereleased(x, y, button)
   if button == 2 then
     mouseholdingbab = false
   end
+end
+
+function love.touchpressed(x, y)
+  love.mousepressed(x, y, 1)
+end
+function love.touchreleased(x, y)
+  love.touchreleased(x, y, 1)
 end
