@@ -97,8 +97,13 @@ local function draw()
       love.graphics.translate(sprites["heart"]:getWidth() / 2,  sprites["heart"]:getHeight() / 2)
       love.graphics.translate(-sprites["heart"]:getWidth() / 2, -sprites["heart"]:getHeight() / 2)
 
-      love.graphics.setColor(244/255, 66/255, 223/255, particle.alpha)
-      love.graphics.draw(sprites["heart"], 0, 0)
+      if particle.star then
+        love.graphics.setColor(1, 1, 0, particle.alpha)
+        love.graphics.draw(sprites["star"], 0, 0)
+      else
+        love.graphics.setColor(244/255, 66/255, 223/255, particle.alpha)
+        love.graphics.draw(sprites["heart"], 0, 0)
+      end
 
       love.graphics.pop()
     end

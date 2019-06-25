@@ -69,7 +69,19 @@ local function update(dt)
 
     babfacing = -babfacing
     if babaiidlefacing then
-      babaiidlefacing = -babaiidlefacing
+      babaiidlefacing = 0
+
+      for i=1, math.random(2,5) do
+        table.insert(particles, {
+          type = "heart",
+          x = babx+math.random(0, sprites["bab"]:getWidth()),
+          y = baby-math.random(-5,5),
+          xvel = math.random(-10, 10)/100,
+          yvel = math.random(-10, 10)/100,
+          seed = math.random(0, 10000)/100000,
+          star = true
+        })
+      end
     end
   end
   baby = limit(baby, 0, love.graphics.getHeight()-sprites["bab"]:getHeight())
