@@ -19,5 +19,14 @@ if your os isn't listed, get the source code zip and skip step 1 in "unstable re
 3. enjoy your new pet bab!
 
 ## screenshots!
+enjoy bab's company!!!
 
-sorry ............ not yet
+![image of bab walking around](screenshots/enjoybab.png)
+
+feed bab treats!!!
+
+![image of lots of little particles on a screen and bab jumping](screenshots/feedbab.png)
+
+pet bab!!!
+
+![image of bab with hearts above head while being pet](screenshots/petbab.png)
